@@ -11,10 +11,13 @@ int main(int argc, char* argv[]) {
         "sounds/break_start.wav"
     };
 
-    PomodoroTimer timer;
+    PomodoroTimer timer(0,0);
     WidgetWindow widgetWindow(timer);
-
-    timer.onFinished = [&notifier]() { notifier.play(); };
+    
+    timer.onPhaseFinished = [&notifier](Phase newPhase) {
+        if (newPhase == Phase::Break) notifier.play(SoundType::BreakStart);
+        else notifier.play(SoundType::BreakEnd);
+    };
 
     g_signal_connect(widgetWindow.getWindow(), "destroy",
                       G_CALLBACK(gtk_main_quit), NULL);
