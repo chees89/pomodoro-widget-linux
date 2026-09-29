@@ -49,3 +49,11 @@ void PomodoroTimer::tick() {
     }
   }
 }
+
+int PomodoroTimer::getSecondsLeft() const {
+  return secondsLeft;
+}
+
+void PomodoroTimer::proportionCalculation() {
+  breakTime = static_cast<int>(workTime * 0.2);
+}

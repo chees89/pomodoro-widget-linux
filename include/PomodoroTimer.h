@@ -16,6 +16,8 @@ public:
     void reset();
     void tick();
 
+    int getSecondsLeft() const;
+
     std::function<void(Phase)> onPhaseFinished;
 
 private:

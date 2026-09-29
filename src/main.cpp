@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
         "sounds/break_start.wav"
     };
 
-    PomodoroTimer timer(0,0);
+    PomodoroTimer timer(25 * 60, -1);
     WidgetWindow widgetWindow(timer);
     
     timer.onPhaseFinished = [&notifier](Phase newPhase) {
