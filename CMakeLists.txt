@@ -21,8 +21,10 @@ set( HEADERS
     include/WidgetWindow.h
 )
 
+file(COPY sounds DESTINATION ${CMAKE_BINARY_DIR})
+
 add_executable("Pomodoro-Widget" ${SOURCES} ${HEADERS})
-include_directories(include)
+target_include_directories(Pomodoro-Widget PRIVATE include)
 target_link_libraries(Pomodoro-Widget PRIVATE
     PkgConfig::GTK3
     PkgConfig::LAYER_SHELL

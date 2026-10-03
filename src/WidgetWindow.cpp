@@ -1,6 +1,12 @@
 #include "WidgetWindow.h"
 
 void WidgetWindow::setupLayerShell() {
+    if (!gtk_layer_is_supported()) {
+        gtk_window_set_keep_above(GTK_WINDOW(window), TRUE);
+        gtk_window_move(GTK_WINDOW(window), 10, 10);
+        return;
+    }
+
     gtk_layer_init_for_window(GTK_WINDOW(window));
     gtk_layer_set_anchor(GTK_WINDOW(window), GTK_LAYER_SHELL_EDGE_LEFT, TRUE);
     gtk_layer_set_anchor(GTK_WINDOW(window), GTK_LAYER_SHELL_EDGE_TOP, TRUE);
@@ -8,7 +14,7 @@ void WidgetWindow::setupLayerShell() {
     gtk_layer_set_margin(GTK_WINDOW(window), GTK_LAYER_SHELL_EDGE_LEFT, 10);
     gtk_layer_set_margin(GTK_WINDOW(window), GTK_LAYER_SHELL_EDGE_TOP, 10);
     gtk_layer_set_exclusive_zone(GTK_WINDOW(window), -1);
-    gtk_layer_set_keyboard_interactivity(GTK_WINDOW(window), FALSE);
+    gtk_layer_set_keyboard_interactivity(GTK_WINDOW(window), TRUE);
 }
 
 WidgetWindow::WidgetWindow(PomodoroTimer& timer) : timer(timer) {
@@ -49,10 +55,12 @@ void WidgetWindow::onAcceptButtonClicked(GtkButton* button, gpointer data) {
     int totalBreakSeconds = breakSeconds + (breakMinutes * 60) + (breakHours * 3600);
 
     if(breakSeconds == 0 && breakMinutes == 0 && breakHours == 0) {
+        self->timer.pause();
         self->timer.configure(totalWorkSeconds, -1);
     }
     else {
-    self->timer.configure(totalWorkSeconds, totalBreakSeconds);
+        self->timer.pause();
+        self->timer.configure(totalWorkSeconds, totalBreakSeconds);
     }
 }
 
@@ -65,11 +73,31 @@ gboolean WidgetWindow::onTimerTick(gpointer data) {
     int minutes = (secondsLeft % 3600) / 60;
     int seconds = secondsLeft % 60;
 
-    char buffer[9];
+    char buffer[64];
     snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d", hours, minutes, seconds);
 
     gtk_label_set_text(GTK_LABEL(self->timerLabel), buffer);
     return TRUE;
+}
+
+void WidgetWindow::updateCalculatedBreakLabel() {
+    int workSeconds = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(workTimeSpinSec));
+    int workMinutes = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(workTimeSpinMin));
+    int workHours   = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(workTimeSpinHours));
+    int totalWorkSeconds = workSeconds + (workMinutes * 60) + (workHours * 3600);
+
+    int breakSeconds = PomodoroTimer::calculateProportionalBreak(totalWorkSeconds);
+    int h = breakSeconds / 3600;
+    int m = (breakSeconds % 3600) / 60;
+    int s = breakSeconds % 60;
+
+    char buffer[48];
+    snprintf(buffer, sizeof(buffer), "Calculated Break: %02d:%02d:%02d", h, m, s);
+    gtk_label_set_text(GTK_LABEL(calculatedBreakLabel), buffer);
+}
+
+void WidgetWindow::onWorkTimeChanged(GtkSpinButton* /*spin*/, gpointer data) {
+    static_cast<WidgetWindow*>(data)->updateCalculatedBreakLabel();
 }
 
 void WidgetWindow::buildUI() {
@@ -130,6 +158,8 @@ void WidgetWindow::buildUI() {
     g_signal_connect(pauseButton, "clicked", G_CALLBACK(WidgetWindow::onPauseButtonClicked), this);
     g_signal_connect(resetButton, "clicked", G_CALLBACK(WidgetWindow::onResetButtonClicked), this);
     g_signal_connect(acceptButton, "clicked", G_CALLBACK(WidgetWindow::onAcceptButtonClicked), this);
+
+    updateCalculatedBreakLabel();
 }
 
 void WidgetWindow::toggleExpanded() {

@@ -7,8 +7,8 @@ int main(int argc, char* argv[]) {
     gtk_init(&argc, &argv);
     
     Notifier notifier{
-        "sounds/break_end.wav",
-        "sounds/break_start.wav"
+        "sounds/WorkSound.mp3",
+        "sounds/BreakSound.mp3"
     };
 
     PomodoroTimer timer(25 * 60, -1);
@@ -21,7 +21,8 @@ int main(int argc, char* argv[]) {
 
     g_signal_connect(widgetWindow.getWindow(), "destroy",
                       G_CALLBACK(gtk_main_quit), NULL);
-
+    
+    gtk_widget_show_all(widgetWindow.getWindow());
     gtk_main();
     return 0;
 }

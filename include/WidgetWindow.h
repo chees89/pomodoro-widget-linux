@@ -25,6 +25,7 @@ private:
     GtkWidget* calculatedBreakLabel;
     GtkWidget* acceptButton;
 
+    static void onWorkTimeChanged(GtkSpinButton* spin, gpointer data);
     static gboolean onClick(GtkWidget* widget, GdkEventButton* event, gpointer data);
     static void onStartButtonClicked(GtkButton* button, gpointer data);
     static void onPauseButtonClicked(GtkButton* button, gpointer data);
@@ -35,6 +36,7 @@ private:
     PomodoroTimer& timer;
     bool expanded = false;
     
+    void updateCalculatedBreakLabel();
     void toggleExpanded();
     void buildUI();
     void setupLayerShell();

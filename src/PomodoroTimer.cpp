@@ -3,6 +3,8 @@
 void PomodoroTimer::configure(int workSeconds, int breakSeconds) {
   workTime = workSeconds;
   
+  if(workSeconds <= 0) return;
+
   if(breakSeconds == -1) {
     proportionCalculation();
   }
@@ -15,11 +17,10 @@ void PomodoroTimer::configure(int workSeconds, int breakSeconds) {
   currentPhase = Phase::Work;
 }
 
-PomodoroTimer::PomodoroTimer (int workSeconds, int breakSeconds) :
-  isTimerGoing(false), secondsLeft(0)
-    {
+PomodoroTimer::PomodoroTimer (int workSeconds, int breakSeconds) 
+{
       configure(workSeconds, breakSeconds);
-    }
+}
 
 void PomodoroTimer::start() {
   isTimerGoing = true;
@@ -31,6 +32,7 @@ void PomodoroTimer::pause() {
 
 void PomodoroTimer::reset() {
   configure(workTime, breakTime);
+  isTimerGoing = false;
 }
 
 void PomodoroTimer::tick() {
@@ -55,5 +57,9 @@ int PomodoroTimer::getSecondsLeft() const {
 }
 
 void PomodoroTimer::proportionCalculation() {
-  breakTime = static_cast<int>(workTime * 0.2);
+    breakTime = calculateProportionalBreak(workTime);
+}
+
+int PomodoroTimer::calculateProportionalBreak(int workSeconds) {
+    return std::max(1, static_cast<int>(workSeconds * 0.2));
 }

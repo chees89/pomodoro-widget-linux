@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include <algorithm>
 
 enum class Phase {
   Work,
@@ -16,17 +17,17 @@ public:
     void reset();
     void tick();
 
+    static int calculateProportionalBreak(int workSeconds);
     int getSecondsLeft() const;
 
     std::function<void(Phase)> onPhaseFinished;
 
 private:
-    Phase currentPhase;
-
-    int secondsLeft;
-    bool isTimerGoing;
-    int workTime;
-    int breakTime;
+    Phase currentPhase = Phase::Work;
+    int secondsLeft = 0;
+    bool isTimerGoing = false;
+    int workTime = 0;
+    int breakTime = 1;
 
     void proportionCalculation();
     
