@@ -1,9 +1,9 @@
 #include "PomodoroTimer.h"
 
 void PomodoroTimer::configure(int workSeconds, int breakSeconds) {
-  workTime = workSeconds;
-  
   if(workSeconds <= 0) return;
+
+    workTime = workSeconds;
 
   if(breakSeconds == -1) {
     proportionCalculation();

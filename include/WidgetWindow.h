@@ -36,6 +36,7 @@ private:
     PomodoroTimer& timer;
     bool expanded = false;
     
+    void updateTimerLabel(); 
     void updateCalculatedBreakLabel();
     void toggleExpanded();
     void buildUI();

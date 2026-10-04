@@ -14,7 +14,7 @@ void WidgetWindow::setupLayerShell() {
     gtk_layer_set_margin(GTK_WINDOW(window), GTK_LAYER_SHELL_EDGE_LEFT, 10);
     gtk_layer_set_margin(GTK_WINDOW(window), GTK_LAYER_SHELL_EDGE_TOP, 10);
     gtk_layer_set_exclusive_zone(GTK_WINDOW(window), -1);
-    gtk_layer_set_keyboard_interactivity(GTK_WINDOW(window), TRUE);
+    gtk_layer_set_keyboard_mode(GTK_WINDOW(window), GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
 }
 
 WidgetWindow::WidgetWindow(PomodoroTimer& timer) : timer(timer) {
@@ -39,7 +39,9 @@ void WidgetWindow::onPauseButtonClicked(GtkButton* button, gpointer data) {
 }
 
 void WidgetWindow::onResetButtonClicked(GtkButton* button, gpointer data) {
-    static_cast<WidgetWindow*>(data)->timer.reset();
+    WidgetWindow* self = static_cast<WidgetWindow*>(data);
+    self->timer.reset();
+    self->updateTimerLabel();
 }
 
 void WidgetWindow::onAcceptButtonClicked(GtkButton* button, gpointer data) {
@@ -62,13 +64,19 @@ void WidgetWindow::onAcceptButtonClicked(GtkButton* button, gpointer data) {
         self->timer.pause();
         self->timer.configure(totalWorkSeconds, totalBreakSeconds);
     }
+    self->updateTimerLabel();
 }
 
 gboolean WidgetWindow::onTimerTick(gpointer data) {
     WidgetWindow* self = static_cast<WidgetWindow*>(data);
     self->timer.tick();
-    auto secondsLeft = self->timer.getSecondsLeft();
-    
+    self->updateTimerLabel();
+    return TRUE;
+}
+
+void WidgetWindow::updateTimerLabel() {
+    auto secondsLeft = timer.getSecondsLeft();
+
     int hours = secondsLeft / 3600;
     int minutes = (secondsLeft % 3600) / 60;
     int seconds = secondsLeft % 60;
@@ -76,8 +84,7 @@ gboolean WidgetWindow::onTimerTick(gpointer data) {
     char buffer[64];
     snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d", hours, minutes, seconds);
 
-    gtk_label_set_text(GTK_LABEL(self->timerLabel), buffer);
-    return TRUE;
+    gtk_label_set_text(GTK_LABEL(timerLabel), buffer);
 }
 
 void WidgetWindow::updateCalculatedBreakLabel() {
@@ -159,12 +166,22 @@ void WidgetWindow::buildUI() {
     g_signal_connect(resetButton, "clicked", G_CALLBACK(WidgetWindow::onResetButtonClicked), this);
     g_signal_connect(acceptButton, "clicked", G_CALLBACK(WidgetWindow::onAcceptButtonClicked), this);
 
+    g_signal_connect(workTimeSpinSec,   "value-changed", G_CALLBACK(WidgetWindow::onWorkTimeChanged), this);
+    g_signal_connect(workTimeSpinMin,   "value-changed", G_CALLBACK(WidgetWindow::onWorkTimeChanged), this);
+    g_signal_connect(workTimeSpinHours, "value-changed", G_CALLBACK(WidgetWindow::onWorkTimeChanged), this);
+
     updateCalculatedBreakLabel();
 }
 
 void WidgetWindow::toggleExpanded() {
     expanded = !expanded;
     gtk_revealer_set_reveal_child(GTK_REVEALER(revealer), expanded);
+
+    if (gtk_layer_is_layer_window(GTK_WINDOW(window))) {
+        gtk_layer_set_keyboard_mode(GTK_WINDOW(window),
+            expanded ? GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND
+                     : GTK_LAYER_SHELL_KEYBOARD_MODE_NONE);
+    }
 }
 
 GtkWidget* WidgetWindow::getWindow() {
